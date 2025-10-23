@@ -9,7 +9,9 @@ exports.handler = async (event) => {
   const headers = {
     'apikey': SUPABASE_SERVICE_ROLE,
     'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE}`,
-    'Content-Type': 'application/json'
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+    'Prefer': 'return=representation'
   };
 
   try {
