@@ -557,14 +557,7 @@ function writeStore(key, value) {
 function renderChat() {
   const list = document.getElementById('chatList');
   if (!list) return;
-  let msgs;
-  if (window.chatService && typeof window.chatService.getMessages === 'function') {
-    msgs = window.chatService.getMessages();
-  } else {
-    msgs = readStore('ar_chat_messages');
-    msgs = pruneOld(msgs, 7);
-    writeStore('ar_chat_messages', msgs);
-  }
+  const msgs = (window.chatService && typeof window.chatService.getMessages === 'function') ? window.chatService.getMessages() : [];
   list.innerHTML = '';
   const sid = getSessionId();
   msgs.forEach((m) => {
@@ -655,22 +648,19 @@ async function sendChatMessage(cfg) {
     author: sid,
     type: document.getElementById('chatRequestBtn')?.getAttribute('aria-pressed') === 'true' ? 'request' : 'message'
   };
-  let ok = true;
-  if (window.chatService && typeof window.chatService.addMessage === 'function') {
-    try {
-      const res = window.chatService.addMessage(msg);
-      if (res && typeof res.then === 'function') ok = await res; else ok = true;
-    } catch (e) { ok = false; }
-  } else {
-    const msgs = pruneOld(readStore('ar_chat_messages'), 7);
-    msgs.push(msg);
-    writeStore('ar_chat_messages', msgs);
-    ok = true;
+  if (!(window.chatService && typeof window.chatService.addMessage === 'function')) {
+    showToast('Chat indisponível.');
+    return;
   }
+  let ok = true;
+  try {
+    const res = window.chatService.addMessage(msg);
+    if (res && typeof res.then === 'function') ok = await res; else ok = true;
+  } catch (e) { ok = false; }
   input.value = '';
   renderChat();
   if (!ok) {
-    showToast('Falha ao enviar mensagem. Verifique Supabase (RLS/credenciais).');
+    showToast('Falha ao enviar mensagem.');
   }
 }
 
@@ -731,9 +721,7 @@ function sendRequestQuick(cfg) {
   if (window.chatService && typeof window.chatService.addMessage === 'function') {
     window.chatService.addMessage(msg);
   } else {
-    const msgs = pruneOld(readStore('ar_chat_messages'), 7);
-    msgs.push(msg);
-    writeStore('ar_chat_messages', msgs);
+    showToast('Chat indisponível.');
   }
   renderChat();
 
@@ -769,9 +757,7 @@ function sendRequest(cfg) {
   if (window.chatService && typeof window.chatService.addMessage === 'function') {
     window.chatService.addMessage(msg);
   } else {
-    const msgs = pruneOld(readStore('ar_chat_messages'), 7);
-    msgs.push(msg);
-    writeStore('ar_chat_messages', msgs);
+    showToast('Chat indisponível.');
   }
   renderChat();
 
@@ -979,13 +965,9 @@ function setupInteractions(cfg) {
     // Preferir API server-side (Netlify/Vercel) para zero exposição
     try {
       await window.apiChat?.init?.();
-      if (window.apiChat?.isHealthy?.()) {
-        window.chatService = window.apiChat;
-      } else {
-        window.chatService?.init?.();
-      }
+      window.chatService = window.apiChat?.isHealthy?.() ? window.apiChat : null;
     } catch (_) {
-      window.chatService?.init?.();
+      window.chatService = null;
     }
 
     setupPlayer(cfg);
@@ -1016,15 +998,22 @@ function renderProviderStatus(cfg) {
       badge.className = 'provider-badge';
       container.prepend(badge);
     }
+    const input = document.getElementById('chatInput');
+    const sendBtn = document.getElementById('chatSendBtn');
+    const reqBtn = document.getElementById('chatRequestBtn');
     if (status?.healthy) {
       badge.textContent = 'Conectado: API';
       badge.setAttribute('aria-label', 'Chat conectado via endpoint seguro');
-    } else if (status) {
-      const reason = status.lastError ? ` — ${String(status.lastError).slice(0,80)}` : '';
-      badge.textContent = `Usando chat local${reason ? '' : ''}`;
-      badge.setAttribute('aria-label', `Backend indisponível${reason}`);
+      if (input) { input.disabled = false; input.placeholder = 'Escreva sua mensagem...'; }
+      if (sendBtn) sendBtn.disabled = false;
+      if (reqBtn) reqBtn.disabled = false;
     } else {
-      badge.textContent = 'Usando chat local';
+      const reason = status?.lastError ? ` — ${String(status.lastError).slice(0,80)}` : '';
+      badge.textContent = 'Chat indisponível';
+      badge.setAttribute('aria-label', `Backend indisponível${reason}`);
+      if (input) { input.disabled = true; input.placeholder = 'Chat indisponível'; }
+      if (sendBtn) sendBtn.disabled = true;
+      if (reqBtn) reqBtn.disabled = true;
     }
   } catch (_) {}
 }
