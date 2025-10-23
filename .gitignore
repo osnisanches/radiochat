@@ -1,5 +1,5 @@
 # Ignore secrets and local configs
-config.json
+
 
 # macOS system files
 .DS_Store

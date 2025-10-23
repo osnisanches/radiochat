@@ -1,0 +1,35 @@
+{
+  "station": {
+    "name": "Rádio de Teste (AAC 320 kbps)",
+    "primaryStream": "https://stream.radioparadise.com/aac-320",
+    "statusJsonUrl": null,
+    "fallbackEmbedPage": "http://fundacaoeducadora.com.br/educadorafm/#"
+  },
+  "instagram": {
+    "profiles": ["conexao.ifpa"],
+    "embedUrl": null,
+    "posts": [
+      {
+        "username": "conexao.ifpa",
+        "image": "https://picsum.photos/id/237/600/600",
+        "caption": "Bem-vindos ao projeto Aluno Repórter! #ConexaoIFPA",
+        "timestamp": "2025-10-20T18:30:00Z",
+        "link": "https://instagram.com/conexao.ifpa"
+      },
+      {
+        "username": "conexao.ifpa",
+        "image": "https://picsum.photos/id/1005/600/600",
+        "caption": "Cobertura da atividade cultural no campus.",
+        "timestamp": "2025-10-19T14:45:00Z",
+        "link": "https://instagram.com/conexao.ifpa"
+      },
+      {
+        "username": "conexao.ifpa",
+        "image": "https://picsum.photos/id/1025/600/600",
+        "caption": "Oficina de rádio: prática com entrevistas e sonoplastia.",
+        "timestamp": "2025-10-18T10:15:00Z",
+        "link": "https://instagram.com/conexao.ifpa"
+      }
+    ]
+  }
+}
