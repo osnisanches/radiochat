@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#121212" />
+  <title>Aluno Repórter — Rádio</title>
+  <meta name="description" content="Rádio web do projeto Aluno Repórter." />
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="stylesheet" href="./styles.css" />
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="preconnect" href="https://stream.radioparadise.com" crossorigin>
+  <!-- Open Graph / Twitter -->
+  <meta property="og:title" content="Aluno Repórter — Rádio" />
+  <meta property="og:description" content="Rádio web do projeto Aluno Repórter." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="/" />
+  <meta property="og:image" content="https://via.placeholder.com/1200x630.png?text=Aluno+Rep%C3%B3rter" />
+  <meta name="twitter:card" content="summary_large_image" />
+</head>
+<body>
+  <div class="page">
+    <header class="app-header">
+      <div class="brand">
+        <div class="logo">AR</div>
+        <div class="titles">
+          <h1>Aluno Repórter</h1>
+          <p>Rádio web</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button id="shareBtn" class="icon-btn" aria-label="Compartilhar">
+          <span class="material-icons">share</span>
+        </button>
+        <button id="toggleCardBtn" class="icon-btn" aria-label="Alternar cards">
+          <span class="material-icons">view_carousel</span>
+        </button>
+        <button id="settingsBtn" class="icon-btn" aria-label="Configurações">
+          <span class="material-icons">settings</span>
+        </button>
+      </div>
+    </header>
+
+    <main class="studio-section" aria-label="Estúdio">
+      <div id="cardsSlider" class="cards-slider" style="--card-index: 0">
+        <div class="cards-track">
+          <div class="card-panel studio-card">
+            <img class="studio-photo" src="https://picsum.photos/id/1060/1200/600" alt="Estúdio da rádio" />
+            <div class="studio-caption"><!-- textos removidos conforme solicitação --></div>
+          </div>
+          <div class="card-panel chat-card">
+            <h3>Mensagens</h3>
+            <p class="preview">Converse com o estúdio e faça seu pedido. Toque abaixo para abrir o chat em tela cheia.</p>
+            <button id="openChatFromCardBtn" class="btn">
+              <span class="material-icons">chat</span>
+              <span class="btn-text">Abrir mensagens</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <section class="player-section" aria-label="Player da Rádio">
+      <div class="player-card">
+        <div class="player-info">
+
+          <div class="track-meta">
+            <h2 id="stationName">Rádio de Teste</h2>
+            <p id="trackInfo" class="track-info" hidden></p>
+            <p id="nowPlaying" class="status">Conectando à transmissão...</p>
+          </div>
+        </div>
+
+        <div class="player-controls" role="group" aria-label="Controles de reprodução">
+          <button id="playPauseBtn" class="btn primary" aria-label="Reproduzir">
+            <span class="material-icons" aria-hidden="true">play_arrow</span>
+            <span class="btn-text">Reproduzir</span>
+          </button>
+          <button id="messageBtn" class="btn" aria-label="Mensagens">
+            <span class="material-icons" aria-hidden="true">chat</span>
+            <span class="btn-text">Mensagens</span>
+          </button>
+
+          <div class="volume">
+            <span class="material-icons" aria-hidden="true">volume_up</span>
+            <input id="volumeRange" type="range" min="0" max="1" step="0.01" value="0.8" aria-label="Volume" />
+
+          </div>
+        </div>
+
+        <audio id="radioAudio" preload="auto" crossorigin="anonymous"></audio>
+
+        <div id="fallbackContainer" class="fallback hidden">
+          <p>Stream principal indisponível. Carregando player alternativo...</p>
+          <iframe id="fallbackIframe" title="Rádio alternativa" loading="lazy"></iframe>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <footer class="app-footer">
+    <small>© Projeto Aluno Repórter — Conexão IFPA</small>
+  </footer>
+
+  <!-- Modal: Identidade / Mande seu alô -->
+  <div id="identityModal" class="modal identity" hidden>
+    <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="identityTitle">
+      <div class="modal-header">
+        <h3 id="identityTitle">Mande seu alô</h3>
+        <button id="closeIdentityBtn" class="icon-btn" aria-label="Fechar">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="form-field">
+          <label>Escolha seu avatar</label>
+          <div id="avatarPicker" class="avatar-picker" role="radiogroup" aria-label="Escolha seu avatar"></div>
+        </div>
+        <div class="form-field">
+          <label for="chatName">Nome</label>
+          <input id="chatName" type="text" placeholder="Seu nome" maxlength="40" />
+        </div>
+        <div class="form-field">
+          <label for="chatSchool">Escola (opcional)</label>
+          <input id="chatSchool" type="text" placeholder="Ex.: IFPA Campus Belém" maxlength="40" />
+        </div>
+        <p class="muted">Suas informações ficam apenas neste dispositivo e sessão.</p>
+      </div>
+      <div class="modal-footer">
+        <button id="identitySaveBtn" class="btn primary">
+          <span class="material-icons">check</span>
+          <span class="btn-text">Continuar</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Chat (full-screen) -->
+  <div id="chatModal" class="modal" hidden>
+    <div class="modal-dialog fullscreen" role="dialog" aria-modal="true" aria-labelledby="chatTitle">
+      <div class="modal-header chat-bar">
+        <div class="chat-controls">
+          <button id="playPauseBtnChat" class="icon-btn" aria-label="Reproduzir/Pausar">
+            <span class="material-icons">play_arrow</span>
+          </button>
+          <div class="volume">
+            <span class="material-icons" aria-hidden="true">volume_up</span>
+            <input id="volumeRangeChat" type="range" min="0" max="1" step="0.01" aria-label="Volume" />
+          </div>
+        </div>
+        <div class="chat-title" aria-live="polite">AR Aluno Repórter — Rádio Web</div>
+        <div class="modal-actions">
+          <button id="editIdentityBtn" class="icon-btn" aria-label="Trocar nome/avatar">
+            <span class="material-icons">person</span>
+          </button>
+          <button id="closeChatBtn" class="icon-btn" aria-label="Fechar">
+            <span class="material-icons">close</span>
+          </button>
+        </div>
+      </div>
+      <div class="modal-body">
+        <ul id="chatList" class="chat-list" aria-live="polite" role="log" aria-relevant="additions text" aria-atomic="false"></ul>
+        <div class="composer">
+          <input id="chatInput" type="text" placeholder="Escreva uma mensagem..." maxlength="240" />
+          <button id="chatSendBtn" class="btn primary" aria-label="Enviar">
+            <span class="material-icons">send</span>
+            <span class="btn-text">Enviar</span>
+          </button>
+          <button id="chatRequestBtn" class="btn" aria-label="Pedir música">
+            <span class="material-icons" aria-hidden="true">music_note</span>
+            <span class="btn-text">Pedido</span>
+          </button>
+        </div>
+        <!-- formulário inline removido: pedido será feito no mesmo input -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Configurações -->
+  <div id="settingsModal" class="modal" hidden>
+    <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+      <div class="modal-header">
+        <h3 id="settingsTitle">Configurações</h3>
+        <button id="closeSettingsBtn" class="icon-btn" aria-label="Fechar">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="form-field">
+          <label for="streamSelect">Stream</label>
+          <select id="streamSelect"></select>
+        </div>
+        <div class="form-field">
+          <label for="volumeRangeSettings">Volume padrão</label>
+          <input id="volumeRangeSettings" type="range" min="0" max="1" step="0.01" />
+        </div>
+        <p class="muted">As preferências são salvas no dispositivo.</p>
+      </div>
+      <div class="modal-footer">
+        <button id="saveSettingsBtn" class="btn primary">
+          <span class="material-icons">check</span>
+          <span class="btn-text">Salvar</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Pedido de Música (mantido por compatibilidade, não usado) -->
+  <div id="requestModal" class="modal" hidden>
+    <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="requestTitle">
+      <div class="modal-header">
+        <h3 id="requestTitle">Pedir Música</h3>
+        <button id="closeRequestBtn" class="icon-btn" aria-label="Fechar">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="form-field">
+          <label for="reqArtistShort">Artista</label>
+          <input id="reqArtistShort" type="text" placeholder="Nome do artista" maxlength="80" />
+        </div>
+        <div class="form-field">
+          <label for="reqSongShort">Música</label>
+          <input id="reqSongShort" type="text" placeholder="Nome da música" maxlength="80" />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="reqSendQuickBtn" class="btn primary">
+          <span class="material-icons">send</span>
+          <span class="btn-text">Enviar pedido</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="./chat_service.js"></script>
+  <script src="./drive.js"></script>
+  <script src="./supabase_chat.js"></script>
+  <script src="./supabase_storage.js"></script>
+  <script src="./app.js?v=dev3"></script>
+</body>
+</html>

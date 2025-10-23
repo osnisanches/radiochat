@@ -1,0 +1,23 @@
+{
+  "station": {
+    "name": "Sua Rádio",
+    "primaryStream": "https://SEU_STREAM_PRINCIPAL.example.com/aac-320",
+    "statusJsonUrl": null,
+    "fallbackEmbedPage": "https://SEU_FALLBACK_PAGE.example.com/"
+  },
+  "instagram": {
+    "profiles": ["seu.perfil"],
+    "embedUrl": null,
+    "posts": []
+  },
+  "google": {
+    "apiKey": "SEU_API_KEY_AQUI",
+    "clientId": "SEU_CLIENT_ID_OAUTH.apps.googleusercontent.com",
+    "driveFolderId": null
+  },
+  "supabase": {
+    "url": "https://SEU_PROJETO.supabase.co",
+    "anonKey": "<SEU_ANON_KEY_AQUI>",
+    "bucket": "photos"
+  }
+}

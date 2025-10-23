@@ -1,0 +1,14 @@
+# Ignore secrets and local configs
+config.json
+
+# macOS system files
+.DS_Store
+
+# Node/Build (future-proof)
+node_modules/
+dist/
+build/
+
+# Env files
+.env
+.env.*
