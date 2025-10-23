@@ -2,7 +2,7 @@ exports.handler = async (event) => {
   const SUPABASE_URL = process.env.SUPABASE_URL;
   const SUPABASE_SERVICE_ROLE = process.env.SUPABASE_SERVICE_ROLE;
   if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE) {
-    return { statusCode: 500, body: JSON.stringify({ error: 'Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE' }) };
+    return { statusCode: 500, headers: corsHeaders(), body: JSON.stringify({ error: 'Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE' }) };
   }
 
   const tableUrl = `${SUPABASE_URL}/rest/v1/messages`;
@@ -20,11 +20,12 @@ exports.handler = async (event) => {
       const resp = await fetch(`${tableUrl}?select=*&order=ts.asc&limit=${limit}`, { headers });
       const text = await resp.text();
       const body = text ? JSON.parse(text) : [];
-      return { statusCode: 200, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) };
+      return { statusCode: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify(body) };
     }
 
     if (event.httpMethod === 'POST') {
       const payload = JSON.parse(event.body || '{}');
+      console.log('[chat] POST payload', { payload });
       // Basic validation and sanitization server-side
       const row = {
         author_session: String(payload.author || '').slice(0, 64) || null,
@@ -36,21 +37,24 @@ exports.handler = async (event) => {
         ts: new Date().toISOString()
       };
       const resp = await fetch(tableUrl, { method: 'POST', headers, body: JSON.stringify(row) });
+      console.log('[chat] Supabase POST status', resp.status);
       if (!resp.ok) {
         const errTxt = await resp.text();
-        return { statusCode: resp.status, body: JSON.stringify({ error: errTxt || 'Insert failed' }) };
+        console.error('[chat] Insert failed', errTxt);
+        return { statusCode: resp.status, headers: { ...corsHeaders() }, body: JSON.stringify({ error: errTxt || 'Insert failed' }) };
       }
       const inserted = await resp.json();
-      return { statusCode: 200, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(inserted) };
+      return { statusCode: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify(inserted) };
     }
 
     if (event.httpMethod === 'OPTIONS') {
       return { statusCode: 204, headers: corsHeaders() };
     }
 
-    return { statusCode: 405, body: JSON.stringify({ error: 'Method not allowed' }) };
+    return { statusCode: 405, headers: corsHeaders(), body: JSON.stringify({ error: 'Method not allowed' }) };
   } catch (e) {
-    return { statusCode: 500, body: JSON.stringify({ error: String(e && e.message || e) }) };
+    console.error('[chat] Handler exception', e);
+    return { statusCode: 500, headers: corsHeaders(), body: JSON.stringify({ error: String(e && e.message || e) }) };
   }
 };
 
