@@ -976,28 +976,17 @@ function setupInteractions(cfg) {
   try {
     const cfg = await loadConfig();
 
-    // Preferir Supabase quando configurado
+    // Preferir API server-side (Netlify/Vercel) para zero exposição
     try {
-      if (cfg?.supabase && window.supabase) {
-        await window.supabaseChat?.init(cfg);
-        await window.supabaseStorage?.init(cfg);
-        // Redirecionar serviços para Supabase apenas se saudável
-        if (window.supabaseChat?.isHealthy?.()) {
-          window.chatService = window.supabaseChat;
-        } else {
-          const st = window.supabaseChat?.getStatus?.();
-          if (st?.lastError) {
-            showToast(`Supabase indisponível: ${String(st.lastError).slice(0,120)}`);
-          }
-          console.warn('Supabase não saudável para chat; usando serviço local.');
-          window.chatService?.init?.();
-        }
-        window.drive = window.supabaseStorage || window.drive;
+      await window.apiChat?.init?.();
+      if (window.apiChat?.isHealthy?.()) {
+        window.chatService = window.apiChat;
       } else {
         window.chatService?.init?.();
-        window.drive?.init && window.drive.init(cfg);
       }
-    } catch (_) {}
+    } catch (_) {
+      window.chatService?.init?.();
+    }
 
     setupPlayer(cfg);
     renderTimeline(cfg);
@@ -1017,7 +1006,7 @@ function setupInteractions(cfg) {
 
 function renderProviderStatus(cfg) {
   try {
-    const status = window.supabaseChat?.getStatus?.();
+    const status = window.apiChat?.getStatus?.();
     const container = document.querySelector('#chatModal .modal-header .modal-actions');
     if (!container) return;
     let badge = document.getElementById('providerStatusBadge');
@@ -1028,12 +1017,12 @@ function renderProviderStatus(cfg) {
       container.prepend(badge);
     }
     if (status?.healthy) {
-      badge.textContent = 'Conectado: Supabase';
-      badge.setAttribute('aria-label', 'Chat conectado ao Supabase');
+      badge.textContent = 'Conectado: API';
+      badge.setAttribute('aria-label', 'Chat conectado via endpoint seguro');
     } else if (status) {
       const reason = status.lastError ? ` — ${String(status.lastError).slice(0,80)}` : '';
       badge.textContent = `Usando chat local${reason ? '' : ''}`;
-      badge.setAttribute('aria-label', `Supabase indisponível${reason}`);
+      badge.setAttribute('aria-label', `Backend indisponível${reason}`);
     } else {
       badge.textContent = 'Usando chat local';
     }

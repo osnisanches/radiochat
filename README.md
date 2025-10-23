@@ -1,72 +1,47 @@
 # Radiochat
 
-Aplicação web simples para streaming de rádio com chat e integração opcional com Supabase e Google Drive. Inclui PWA com Service Worker para uso mobile/offline básico.
+Aplicação web simples para streaming de rádio com chat. Agora sem exposição de chaves: todo acesso a dados protegidos é feito via endpoints server-side.
 
 ## Requisitos
 - Navegador moderno (Chrome/Edge/Firefox/Safari).
-- Supabase (URL e `anonKey`) se for usar chat/armazenamento.
-- Google API (opcional) para listar fotos do Drive.
+- Netlify (ou Vercel) para hospedar funções server-side.
 
 ## Setup local
-1. Copie o arquivo `config.example.json` para `config.json`:
-   - Preencha:
-     - `station.primaryStream`: URL HTTPS do seu stream.
-     - `supabase.url` e `supabase.anonKey` (se usar chat/armazenamento).
-     - `google.apiKey` e `google.clientId` (se usar Drive/Photos).
-2. Sirva os arquivos com um servidor estático local:
-   - Opção rápida: `python3 -m http.server 8080` (na pasta do projeto) e acesse `http://localhost:8080/`.
-3. Abra `index.html` e valide:
-   - Player toca seu stream.
-   - Chat abre/fecha e envia mensagens (se Supabase configurado).
-   - PWA instala em mobile (Chrome/Android).
+1. Copie `config.example.json` para `config.json` e preencha apenas valores públicos:
+   - `station.name` e `station.primaryStream` (HTTPS).
+   - `station.statusJsonUrl` (opcional).
+   - `instagram.embedUrl` e `instagram.posts` (opcional).
+   - Não inclua chaves de Supabase ou Google no `config.json`.
+2. Servir local rapidamente:
+   - `python3 -m http.server 8080` e acessar `http://localhost:8080/`.
+
+## Backend (Netlify)
+- Crie as variáveis de ambiente no projeto Netlify:
+  - `SUPABASE_URL`: URL do seu projeto Supabase.
+  - `SUPABASE_SERVICE_ROLE`: chave de serviço (NÃO pública). Fica apenas no backend.
+- Endpoints:
+  - `/.netlify/functions/chat` `GET`: lista mensagens (limite via `?limit=200`).
+  - `/.netlify/functions/chat` `POST`: insere mensagem (validação básica no servidor).
+- Deploy estático + funções:
+  - Build command: vazio.
+  - Publish directory: raiz.
+  - `_headers`: já inclui cache curto para `config.json`.
 
 ## Segurança
-- `config.json` NÃO é versionado (está no `.gitignore`). Use `config.example.json` para exemplos.
-- `Supabase anonKey` é público por design; habilite RLS e políticas restritivas na sua tabela (ex.: `public.messages`).
-- Restrinja sua `google apiKey` por domínios (HTTP referrer) e escopos.
-- Evite segredos no cliente. Qualquer `adminPasscode` no frontend não é segurança real. Use autenticação/ACL no backend se precisar de área administrativa.
-
-## Deploy
-### Netlify
-- Build command: vazio.
-- Publish directory: raiz do projeto.
-- Arquivo `_headers` (já incluso): limita cache do `config.json` para atualizações rápidas.
-- Pós-deploy: valide player, chat, PWA e chamadas ao Supabase.
-
-### Vercel
-- Framework: Other.
-- Build command: vazio.
-- Output directory: raiz.
-- Configure variáveis/URLs permitidas em `Project Settings` se necessário.
-
-## Supabase (resumo)
-- Crie a tabela `public.messages` (exemplo):
-  - `id` (uuid ou bigint, PK)
-  - `name` (text)
-  - `avatar_url` (text, opcional)
-  - `message` (text)
-  - `created_at` (timestamp com default `now()`)
-- Habilite RLS e crie políticas mínimas:
-  - `SELECT`: permitir leitura pública se for desejado.
-  - `INSERT`: permitir apenas o que considerar seguro (ex.: todos com `anon`, ou usuários autenticados).
-- Opcional: habilite Realtime no schema público para atualizar o chat em tempo real.
+- Zero chaves no frontend: nenhum `anonKey`, API key ou clientId é necessário no navegador.
+- Supabase acessado via service role no backend (não exposto). Restrinja tabelas e lógica no servidor.
+- RLS continua recomendada na base para consumo alternativo, mas o endpoint usa service role com validação.
 
 ## PWA e cache
-- O Service Worker (`sw.js`) está incluído. Em produção, mantenha cache curto para `config.json` (via `_headers` ou estratégia network-first no SW).
-- Teste em `Application > Service Workers` no DevTools e confirme atualização quando mudar o `config.json`.
+- `sw.js` usa strategy network-first para `config.json`, com fallback offline.
 
 ## Comandos úteis
 - Commit e push:
   - `git add -A && git commit -m "Atualizações" && git push`
-- Servir local rapidamente:
+- Servir local:
   - `python3 -m http.server 8080`
 
-## Próximos passos sugeridos
-- Remover/ocultar qualquer fluxo de "adminPasscode" no cliente em produção.
-- Implementar estratégia network-first para `config.json` no `sw.js` (se desejar cache controlado pelo SW).
-- Adicionar README com instruções de Supabase mais detalhadas (migrations/policies) se o chat for central ao app.
-
 ## Troubleshooting
-- Player não toca: verifique se o stream é HTTPS e suporta CORS.
-- Chat não envia: confirme `supabase.url` e `anonKey`, RLS e políticas de `INSERT`.
-- PWA não instala: valide `manifest.json`, ícones e ativação do Service Worker.
+- Chat não conecta: valide que o site está em um domínio do Netlify/Vercel com a função acessível.
+- 500 na função: verifique variáveis `SUPABASE_URL` e `SUPABASE_SERVICE_ROLE` no painel do provedor.
+- Player não toca: confirme que o stream é HTTPS e acessível.
