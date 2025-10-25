@@ -81,6 +81,9 @@ function initMobileModals() {
   if (chatToggleBtn && chatModal) {
     chatToggleBtn.addEventListener('click', () => {
       showModal(chatModal);
+      if (typeof renderChat === 'function') {
+        renderChat();
+      }
       toggleBrandLogoPlayer(true);
     });
   }

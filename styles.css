@@ -71,7 +71,7 @@ body {
   background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden;
 }
 .post-media {
-  width: 100%; aspect-ratio: 1 / 1; object-fit: cover; display: block;
+  width: 100%; aspect-ratio: 1 / 1; object-fit: contain; display: block;
 }
 .post-body { padding: 10px; }
 .post-meta {
@@ -120,8 +120,8 @@ body {
 .bubble p { color: inherit; }
 .theirs .bubble { background: #23304f; color: #eef2ff; border: 1px solid rgba(255,255,255,0.12); }
 .mine .bubble { background: #6d28d9; color: #faf5ff; border: 1px solid #5b21b6; }
-.bubble .name { display: block; font-weight: 700; font-size: 12px; margin-bottom: 3px; opacity: 0.95; }
-.bubble .time { display: block; font-size: 11px; color: #cbd5e1; text-align: right; margin-top: 6px; }
+.bubble .name { display: block; font-weight: 700; font-size: 11px; margin-bottom: 3px; opacity: 0.95; }
+.bubble .time { display: inline; font-size: 8pt; color: #cbd5e1; margin-left: 6px; }
 .bubble.request { background: #4d2b78; color: #efeaf6; border: 1px solid #c084fc; }
 .bubble.request .title { display: block; font-weight: 700; font-size: 12px; margin-bottom: 4px; color: #ffe0e0; }
 

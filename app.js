@@ -87,10 +87,10 @@ function setupPlayer(cfg) {
       audio.muted = true;
       await audio.play();
       updatePlayPauseUI(true);
-      setNowPlayingText('Tocando (mudo)...');
+      setNowPlayingText('(mudo)');
 
       const unmute = () => {
-        try { audio.muted = false; setNowPlayingText('Tocando...'); } catch (_) {}
+        try { audio.muted = false; setNowPlayingText('No ar'); } catch (_) {}
         window.removeEventListener('click', unmute);
         window.removeEventListener('touchstart', unmute);
       };
@@ -98,7 +98,7 @@ function setupPlayer(cfg) {
       window.addEventListener('touchstart', unmute, { once: true });
     } catch (err) {
       console.warn('Autoplay bloqueado pelo navegador', err);
-      setNowPlayingText('Pronto. Toque em Reproduzir.');
+      setNowPlayingText('Aperte o play!');
     }
   })();
 
@@ -116,7 +116,7 @@ function setupPlayer(cfg) {
         audio.muted = false;
         await audio.play();
         updatePlayPauseUI(true);
-        setNowPlayingText('Tocando...');
+        setNowPlayingText('No ar');
       } else {
         audio.pause();
         updatePlayPauseUI(false);
@@ -757,7 +757,7 @@ function renderChat() {
 
     const name = document.createElement('span');
     name.className = 'name';
-    name.textContent = m.name;
+    name.textContent = String(m.name || '').split('&&&')[0].trim();
     bubble.appendChild(name);
 
     if (m.type === 'request') {
@@ -774,8 +774,12 @@ function renderChat() {
     const time = document.createElement('span');
     time.className = 'time';
     const dt = new Date(m.ts || Date.now());
-    time.textContent = `${dt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
-    bubble.appendChild(time);
+    const day = String(dt.getDate()).padStart(2, '0');
+    const month = String(dt.getMonth() + 1).padStart(2, '0');
+    const hour = String(dt.getHours()).padStart(2, '0');
+    const minute = String(dt.getMinutes()).padStart(2, '0');
+    time.textContent = `${day}/${month}, ${hour}h${minute}`;
+    text.appendChild(time);
 
     // Ícones de reação flutuantes (não botões)
     let likeCount = 0, heartCount = 0;
@@ -1466,7 +1470,7 @@ function renderProviderStatus(cfg) {
     const sendBtn = document.getElementById('chatSendBtn');
     const reqBtn = document.getElementById('chatRequestBtn');
     if (status?.healthy) {
-      badge.textContent = 'Conectado: API';
+      badge.textContent = 'Conectado';
       badge.setAttribute('aria-label', 'Chat conectado via endpoint seguro');
       if (input) { input.disabled = false; input.placeholder = 'Escreva sua mensagem...'; }
       if (sendBtn) sendBtn.disabled = false;

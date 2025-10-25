@@ -37,8 +37,7 @@
         </button>
       </div>
     </header>
-    <div id="miniPlayerBar" class="mini-player" hidden></div>
-
+   
     <!-- Mobile Navigation -->
     <nav id="mobileNav" class="mobile-nav">
       <button id="navCloseBtn" class="nav-close" aria-label="Fechar menu">
@@ -70,12 +69,10 @@
       <!-- Hero Section -->
       <section id="hero" class="mobile-hero">
         <div class="hero-image-container">
-          <img id="heroImage" class="hero-image studio-photo" src="https://picsum.photos/id/1060/800/400" alt="Estúdio da rádio" />
-          <div class="hero-overlay">
-            <div class="hero-content">
-              <h2>Bem-vind@s ao nosso estúdio.</h2>
-              <p>Participe ao vivo de nossa programação!</p>
-            </div>
+          <img id="heroImage" class="hero-image studio-photo" src="https://fastly.picsum.photos/id/39/3456/2304.jpg?hmac=cc_VPxzydwTUbGEtpsDeo2NxCkeYQrhTLqw4TFo-dIg" alt="Estúdio da rádio" />
+          <div class="hero-content">
+            <h2>Conexão IFPA no ar!</h2>
+            <p>Bem-vind@s ao nosso estúdio.</p>
           </div>
         </div>
       </section>
@@ -138,13 +135,17 @@
       <section id="gallery" class="mobile-gallery">
       <div class="section-header">
         <h2>Galeria de Fotos</h2>
-        <p>Momentos especiais do nosso estúdio</p>
+        <p>Veja o que tá rolando no estúdio ao vivo!</p>
       </div>
       <div id="storiesStrip" class="stories-strip" aria-label="Destaques">
         <!-- Bolinhas dos stories serão renderizadas via JS -->
       </div>
       <div id="photoGallery" class="mobile-photo-grid">
         <!-- Fotos serão carregadas dinamicamente -->
+      </div>
+      <div class="section-header">
+        <h1>@AlunoReporter</h1>
+        <p>@AlunoReporter</p>
       </div>
       </section>
 
@@ -188,10 +189,10 @@
       </div>
       <div class="modal-body">
         <div class="identity-form">
-          <label for="chatNameModal">Nome completo</label>
+          <label for="chatNameModal">Nome:</label>
           <input id="chatNameModal" type="text" placeholder="Seu nome completo" maxlength="80" />
           <label for="chatSchool">Escola/Instituição</label>
-          <input id="chatSchool" type="text" placeholder="Ex.: IFPA Campus Belém" maxlength="80" />
+          <input id="chatSchool" type="text" placeholder="Ex.: De onde tu és, mano?" maxlength="80" />
           <div id="avatarPicker" role="radiogroup" aria-label="Escolher avatar"></div>
           <p class="muted">Suas informações ficam apenas nesta sessão.</p>
         </div>
