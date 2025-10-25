@@ -1,6 +1,6 @@
 {
   "station": {
-    "name": "Rádio de Teste (AAC 320 kbps)",
+    "name": "Rádio Aluno Repórter (AAC 320 kbps)",
     "primaryStream": "https://stream.radioparadise.com/aac-320",
     "statusJsonUrl": null,
     "fallbackEmbedPage": "http://fundacaoeducadora.com.br/educadorafm/#"

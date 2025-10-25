@@ -16,10 +16,31 @@ exports.handler = async (event) => {
 
   try {
     if (event.httpMethod === 'GET') {
-      const limit = parseInt((event.queryStringParameters || {}).limit || '200', 10);
-      const resp = await fetch(`${tableUrl}?select=*&order=ts.asc&limit=${limit}`, { headers });
+      const qs = event.queryStringParameters || {};
+      const limit = Math.max(1, Math.min(200, parseInt(qs.limit || '200', 10)));
+      const offset = Math.max(0, parseInt(qs.offset || '0', 10));
+      const term = (qs.q || '').trim();
+      const author = (qs.author || '').trim();
+      const params = [];
+      params.push('select=*');
+      // ordem ascendente para que novas mensagens apareçam no fim
+      params.push('order=ts.asc');
+      if (term && author) {
+        const enc = encodeURIComponent(term);
+        const encAuth = encodeURIComponent(author);
+        params.push(`or=(text.ilike.*${enc}*,name.ilike.*${enc}*,author_session.eq.${encAuth})`);
+      } else if (term) {
+        const enc = encodeURIComponent(term);
+        params.push(`or=(text.ilike.*${enc}*,name.ilike.*${enc}*)`);
+      } else if (author) {
+        const encAuth = encodeURIComponent(author);
+        params.push(`author_session.eq.${encAuth}`);
+      }
+      const url = `${tableUrl}?${params.join('&')}`;
+      const headersWithRange = { ...headers, 'Range': `${offset}-${offset + limit - 1}` };
+      const resp = await fetch(url, { headers: headersWithRange });
       const text = await resp.text();
-      const body = text ? JSON.parse(text) : [];
+      let body = text ? JSON.parse(text) : [];
       return { statusCode: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify(body) };
     }
 
@@ -29,8 +50,9 @@ exports.handler = async (event) => {
       // Basic validation and sanitization server-side
       const row = {
         author_session: String(payload.author || '').slice(0, 64) || null,
-        name: String(payload.name || '').slice(0, 80) || 'Anônimo',
-        school: payload.school ? String(payload.school).slice(0, 80) : null,
+        name: String(payload.name || '').slice(0, 140) || 'Anônimo',
+        // reutiliza a coluna school para reações/likes; aceita texto/JSON
+        school: payload.school ? String(payload.school).slice(0, 200) : null,
         avatar: payload.avatar ? String(payload.avatar).slice(0, 200) : null,
         text: String(payload.text || '').slice(0, 240),
         type: payload.type ? String(payload.type).slice(0, 20) : 'message',
@@ -45,6 +67,48 @@ exports.handler = async (event) => {
       }
       const inserted = await resp.json();
       return { statusCode: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify(inserted) };
+    }
+
+    // PATCH: atualizar reações em "school" (JSON ou número como string)
+    if (event.httpMethod === 'PATCH') {
+      const qs = event.queryStringParameters || {};
+      const id = (qs.id || '').trim();
+      const kind = (qs.kind || '').trim(); // 'like' | 'heart'
+      if (!id || !kind) return { statusCode: 400, headers: corsHeaders(), body: JSON.stringify({ error: 'Missing id or kind' }) };
+
+      // obter a linha atual
+      const getUrl = `${tableUrl}?id=eq.${encodeURIComponent(id)}&select=*`;
+      const got = await fetch(getUrl, { headers });
+      if (!got.ok) {
+        const errTxt = await got.text();
+        return { statusCode: got.status, headers: corsHeaders(), body: JSON.stringify({ error: errTxt || 'Fetch failed' }) };
+      }
+      const arr = await got.json();
+      const cur = Array.isArray(arr) && arr[0] ? arr[0] : null;
+      if (!cur) return { statusCode: 404, headers: corsHeaders(), body: JSON.stringify({ error: 'Not found' }) };
+
+      // interpretar school
+      let counts = { like: 0, heart: 0 };
+      try {
+        if (typeof cur.school === 'string' && cur.school.trim()) {
+          const parsed = JSON.parse(cur.school);
+          if (parsed && typeof parsed === 'object') counts = { like: parseInt(parsed.like || 0, 10) || 0, heart: parseInt(parsed.heart || 0, 10) || 0 };
+          else counts = { like: parseInt(cur.school || '0', 10) || 0, heart: 0 };
+        }
+      } catch (_) { counts = { like: parseInt(cur.school || '0', 10) || 0, heart: 0 }; }
+
+      // incrementar
+      if (kind === 'like') counts.like += 1; else if (kind === 'heart') counts.heart += 1; else return { statusCode: 400, headers: corsHeaders(), body: JSON.stringify({ error: 'Invalid kind' }) };
+
+      const nextSchool = JSON.stringify(counts);
+      const patchUrl = `${tableUrl}?id=eq.${encodeURIComponent(id)}`;
+      const updated = await fetch(patchUrl, { method: 'PATCH', headers, body: JSON.stringify({ school: nextSchool }) });
+      if (!updated.ok) {
+        const errTxt = await updated.text();
+        return { statusCode: updated.status, headers: corsHeaders(), body: JSON.stringify({ error: errTxt || 'Patch failed' }) };
+      }
+      const body = await updated.json();
+      return { statusCode: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify(body) };
     }
 
     if (event.httpMethod === 'OPTIONS') {
@@ -62,6 +126,6 @@ function corsHeaders() {
   return {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'Content-Type',
-    'Access-Control-Allow-Methods': 'GET,POST,OPTIONS'
+    'Access-Control-Allow-Methods': 'GET,POST,PATCH,OPTIONS'
   };
 }

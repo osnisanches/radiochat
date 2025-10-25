@@ -1,0 +1,13 @@
+[build]
+functions = "netlify/functions"
+publish = "."
+
+[dev]
+port = 8888
+functionsPort = 8889
+autoLaunch = false
+targetPort = 8081
+command = "python3 -m http.server 8081"
+framework = "#custom"
+
+# Headers and redirects can be added later if needed

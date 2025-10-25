@@ -12,3 +12,7 @@ build/
 # Env files
 .env
 .env.*
+# Local Netlify folder
+.netlify
+lixeira/
+config.json

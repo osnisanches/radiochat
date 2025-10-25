@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+  <title>Admin Mobile — Aluno Repórter</title>
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="./styles.css" />
+  <link rel="stylesheet" href="./mobile.css" />
+  <link rel="stylesheet" href="./admin-mobile.css" />
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body class="mobile-layout admin-mobile">
+  <div class="page">
+    <!-- Mobile Admin Header -->
+    <header class="mobile-admin-header">
+      <div class="admin-brand">
+        <div class="logo">AR</div>
+        <div class="titles">
+          <h1>Admin Panel</h1>
+          <p>Aluno Repórter</p>
+        </div>
+      </div>
+      <div class="admin-actions">
+        <button id="logoutBtn" class="icon-btn" aria-label="Sair" style="display: none;">
+          <span class="material-icons">logout</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Login Section -->
+    <div id="loginSection" class="login-section">
+      <div class="login-container">
+        <div class="login-header">
+          <div class="login-icon">
+            <span class="material-icons">admin_panel_settings</span>
+          </div>
+          <h2>Acesso Administrativo</h2>
+          <p>Digite sua senha para acessar o painel</p>
+        </div>
+        <div class="login-form">
+          <div class="input-group">
+            <span class="material-icons">lock</span>
+            <input type="password" id="adminPass" placeholder="Senha do administrador" />
+          </div>
+          <button class="login-btn" id="loginBtn">
+            <span class="material-icons">login</span>
+            Entrar
+          </button>
+          <div id="loginStatus" class="login-status"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Admin Content -->
+    <main id="adminContent" class="admin-content" style="display: none;">
+      <!-- Photos Management -->
+      <section class="admin-section">
+        <div class="section-header">
+          <h3>
+            <span class="material-icons">photo_library</span>
+            Gerenciar Fotos
+          </h3>
+        </div>
+        <div class="admin-card">
+          <div class="upload-area">
+            <input type="file" id="photoInput" accept="image/*" style="display: none;" />
+            <button class="upload-btn" id="uploadTrigger">
+              <span class="material-icons">add_photo_alternate</span>
+              Adicionar Foto
+            </button>
+          </div>
+          
+          <div class="cover-settings">
+            <div class="setting-row">
+              <label for="coverMode">Modo de Exibição:</label>
+              <select id="coverMode" class="mobile-select">
+                <option value="single">Uma foto</option>
+                <option value="slideshow">Slideshow</option>
+              </select>
+            </div>
+            <div class="setting-row">
+              <label for="featuredName">Nome da foto destacada:</label>
+              <input type="text" id="featuredName" placeholder="Nome (opcional)" class="mobile-input" />
+            </div>
+          </div>
+
+          <div class="current-cover">
+            <h4>Foto de Capa Atual</h4>
+            <div class="cover-preview-container">
+              <img id="coverPreview" class="cover-preview" src="" alt="Capa atual" style="display: none;" />
+              <div id="noCoverMessage" class="no-cover">Nenhuma foto de capa definida</div>
+            </div>
+          </div>
+
+          <div class="photos-gallery">
+            <h4>Galeria de Fotos</h4>
+            <div id="photosList" class="mobile-photos-grid">
+              <!-- Fotos serão carregadas aqui -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- System Status -->
+      <section class="admin-section">
+        <div class="section-header">
+          <h3>
+            <span class="material-icons">info</span>
+            Status do Sistema
+          </h3>
+        </div>
+        <div class="admin-card">
+          <div class="status-grid">
+            <div class="status-item">
+              <span class="material-icons">storage</span>
+              <div class="status-info">
+                <div class="status-label">Fotos Armazenadas</div>
+                <div id="photosCount" class="status-value">0</div>
+              </div>
+            </div>
+            <div class="status-item">
+              <span class="material-icons">schedule</span>
+              <div class="status-info">
+                <div class="status-label">Última Atualização</div>
+                <div id="lastUpdate" class="status-value">-</div>
+              </div>
+            </div>
+            <div class="status-item">
+              <span class="material-icons">radio</span>
+              <div class="status-info">
+                <div class="status-label">Status da Rádio</div>
+                <div id="radioStatus" class="status-value">Online</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Quick Actions -->
+      <section class="admin-section">
+        <div class="section-header">
+          <h3>
+            <span class="material-icons">flash_on</span>
+            Ações Rápidas
+          </h3>
+        </div>
+        <div class="admin-card">
+          <div class="quick-actions">
+            <button class="action-btn" id="refreshGalleryBtn">
+              <span class="material-icons">refresh</span>
+              Atualizar Galeria
+            </button>
+            <button class="action-btn" id="clearCacheBtn">
+              <span class="material-icons">clear_all</span>
+              Limpar Cache
+            </button>
+            <button class="action-btn" id="exportDataBtn">
+              <span class="material-icons">download</span>
+              Exportar Dados
+            </button>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Photo Preview Modal -->
+  <div id="photoModal" class="modal">
+    <div class="modal-content photo-modal-content">
+      <div class="modal-header">
+        <h3>Visualizar Foto</h3>
+        <button id="closePhotoModal" class="icon-btn" aria-label="Fechar">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <img id="modalPhoto" class="modal-photo" src="" alt="Foto" />
+        <div class="photo-actions">
+          <button id="setCoverBtn" class="action-btn primary">
+            <span class="material-icons">image</span>
+            Definir como Capa
+          </button>
+          <button id="deletePhotoBtn" class="action-btn danger">
+            <span class="material-icons">delete</span>
+            Excluir Foto
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Confirmation Modal -->
+  <div id="confirmModal" class="modal">
+    <div class="modal-content confirm-modal-content">
+      <div class="modal-header">
+        <h3>Confirmar Ação</h3>
+      </div>
+      <div class="modal-body">
+        <p id="confirmMessage">Tem certeza que deseja realizar esta ação?</p>
+        <div class="confirm-actions">
+          <button id="confirmYes" class="action-btn danger">Sim</button>
+          <button id="confirmNo" class="action-btn">Cancelar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading Overlay -->
+  <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+    <div class="loading-spinner">
+      <div class="spinner"></div>
+      <p>Carregando...</p>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <!-- Scripts -->
+  <script src="./admin-mobile.js"></script>
+</body>
+</html>

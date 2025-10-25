@@ -2,129 +2,199 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
   <meta name="theme-color" content="#121212" />
-  <title>Aluno Repórter — Rádio</title>
-  <meta name="description" content="Rádio web do projeto Aluno Repórter." />
+  <title>Aluno Repórter — Rádio Mobile</title>
+  <meta name="description" content="Rádio web do projeto Aluno Repórter - Versão Mobile." />
   <link rel="manifest" href="./manifest.json" />
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="./styles.css" />
+  <link rel="stylesheet" href="./mobile.css" />
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <link rel="preconnect" href="https://stream.radioparadise.com" crossorigin>
   <!-- Open Graph / Twitter -->
-  <meta property="og:title" content="Aluno Repórter — Rádio" />
-  <meta property="og:description" content="Rádio web do projeto Aluno Repórter." />
+  <meta property="og:title" content="Aluno Repórter — Rádio Mobile" />
+  <meta property="og:description" content="Rádio web do projeto Aluno Repórter - Versão Mobile." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="/" />
   <meta property="og:image" content="https://via.placeholder.com/1200x630.png?text=Aluno+Rep%C3%B3rter" />
   <meta name="twitter:card" content="summary_large_image" />
 </head>
-<body>
+<body class="mobile-layout">
   <div class="page">
-    <header class="app-header">
-      <div class="brand">
-        <div class="logo">AR</div>
+    <!-- Mobile Header -->
+    <header class="mobile-header">
+      <div class="mobile-brand">
+        <div id="brandLogoBtn" class="logo">AR</div>
         <div class="titles">
-          <h1>Aluno Repórter</h1>
-          <p>Rádio web</p>
+          <h1>Rádio Web Aluno Repórter</h1>
+          <p id="stationName">Aluno Repórter</p>
         </div>
       </div>
-      <div class="header-actions">
-        <button id="shareBtn" class="icon-btn" aria-label="Compartilhar">
-          <span class="material-icons">share</span>
-        </button>
-        <button id="toggleCardBtn" class="icon-btn" aria-label="Alternar cards">
-          <span class="material-icons">view_carousel</span>
-        </button>
-        <button id="settingsBtn" class="icon-btn" aria-label="Configurações">
-          <span class="material-icons">settings</span>
+      <div class="mobile-actions">
+        <button id="mobileMenuBtn" class="icon-btn" aria-label="Menu">
+          <span class="material-icons">menu</span>
         </button>
       </div>
     </header>
+    <div id="miniPlayerBar" class="mini-player" hidden></div>
 
-    <main class="studio-section" aria-label="Estúdio">
-      <div id="cardsSlider" class="cards-slider" style="--card-index: 0">
-        <div class="cards-track">
-          <div class="card-panel studio-card">
-            <img class="studio-photo" src="https://picsum.photos/id/1060/1200/600" alt="Estúdio da rádio" />
-            <div class="studio-caption"><!-- textos removidos conforme solicitação --></div>
-          </div>
-          <div class="card-panel chat-card">
-            <h3>Mensagens</h3>
-            <p class="preview">Converse com o estúdio e faça seu pedido. Toque abaixo para abrir o chat em tela cheia.</p>
-            <button id="openChatFromCardBtn" class="btn">
-              <span class="material-icons">chat</span>
-              <span class="btn-text">Abrir mensagens</span>
-            </button>
-          </div>
-        </div>
-      </div>
-    </main>
-
-    <section class="player-section" aria-label="Player da Rádio">
-      <div class="player-card">
-        <div class="player-info">
-
-          <div class="track-meta">
-            <h2 id="stationName">Rádio de Teste</h2>
-            <p id="trackInfo" class="track-info" hidden></p>
-            <p id="nowPlaying" class="status">Conectando à transmissão...</p>
-          </div>
-        </div>
-
-        <div class="player-controls" role="group" aria-label="Controles de reprodução">
-          <button id="playPauseBtn" class="btn primary" aria-label="Reproduzir">
-            <span class="material-icons" aria-hidden="true">play_arrow</span>
-            <span class="btn-text">Reproduzir</span>
-          </button>
-          <button id="messageBtn" class="btn" aria-label="Mensagens">
-            <span class="material-icons" aria-hidden="true">chat</span>
-            <span class="btn-text">Mensagens</span>
-          </button>
-
-          <div class="volume">
-            <span class="material-icons" aria-hidden="true">volume_up</span>
-            <input id="volumeRange" type="range" min="0" max="1" step="0.01" value="0.8" aria-label="Volume" />
-
-          </div>
-        </div>
-
-        <audio id="radioAudio" preload="auto" crossorigin="anonymous"></audio>
-
-        <div id="fallbackContainer" class="fallback hidden">
-          <p>Stream principal indisponível. Carregando player alternativo...</p>
-          <iframe id="fallbackIframe" title="Rádio alternativa" loading="lazy"></iframe>
-        </div>
-      </div>
-    </section>
-  </div>
-
-  <footer class="app-footer">
-    <small>© Projeto Aluno Repórter — Conexão IFPA</small>
-  </footer>
-
-  <!-- Modal: Identidade / Mande seu alô -->
-  <div id="identityModal" class="modal identity" hidden>
-    <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="identityTitle">
-      <div class="modal-header">
-        <h3 id="identityTitle">Mande seu alô</h3>
-        <button id="closeIdentityBtn" class="icon-btn" aria-label="Fechar">
-          <span class="material-icons">close</span>
+    <!-- Mobile Navigation -->
+    <nav id="mobileNav" class="mobile-nav">
+      <button id="navCloseBtn" class="nav-close" aria-label="Fechar menu">
+        <span class="material-icons">close</span>
+      </button>
+      <ul class="nav-list">
+        <li><a href="#hero" class="nav-link">Início</a></li>
+        <li><a href="#gallery" class="nav-link">Galeria</a></li>
+        <li><a href="#chat" class="nav-link">Chat</a></li>
+        <li><a href="#player" class="nav-link">Player</a></li>
+      </ul>
+      <div class="nav-actions">
+        <button id="shareBtn" class="nav-btn">
+          <span class="material-icons">share</span>
+          Compartilhar
+        </button>
+        <button id="settingsBtn" class="nav-btn">
+          <span class="material-icons">settings</span>
+          Configurações
+        </button>
+        <button id="adminBtn" class="nav-btn">
+          <span class="material-icons">admin_panel_settings</span>
+          Admin
         </button>
       </div>
+    </nav>
+
+    <main class="mobile-main">
+      <!-- Hero Section -->
+      <section id="hero" class="mobile-hero">
+        <div class="hero-image-container">
+          <img id="heroImage" class="hero-image studio-photo" src="https://picsum.photos/id/1060/800/400" alt="Estúdio da rádio" />
+          <div class="hero-overlay">
+            <div class="hero-content">
+              <h2>Bem-vind@s ao nosso estúdio.</h2>
+              <p>Participe ao vivo de nossa programação!</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Player Section -->
+      <section id="player" class="mobile-player">
+        <div class="player-container">
+          <div class="player-info">
+            <div id="trackInfo" class="track-info" hidden>Carregando...</div>
+            <div class="now-playing-row">
+            <span id="nowPlaying" class="now-playing">Conectando...</span>
+            <span id="playingIndicator" class="playing-indicator" hidden aria-hidden="true"></span>
+            </div>
+          </div>
+          <div class="player-controls">
+            <button id="shareBtnPlayer" class="icon-btn" aria-label="Compartilhar">
+              <span class="material-icons">share</span>
+            </button>
+            <button id="playPauseBtn" class="play-btn" aria-label="Reproduzir">
+              <span class="material-icons">play_arrow</span>
+            </button>
+            <div class="volume-control">
+              <span class="material-icons">volume_up</span>
+              <input type="range" id="volumeRange" min="0" max="1" step="0.01" value="0.8" class="volume-slider" />
+            </div>
+          </div>
+          <!-- Audio element required by app.js -->
+          <audio id="radioAudio" preload="auto" crossorigin="anonymous"></audio>
+          <!-- Fallback player container -->
+          <div id="fallbackContainer" class="fallback hidden" style="margin-top: 1rem;">
+            <iframe id="fallbackIframe" title="Rádio alternativa" loading="lazy" style="width:100%;height:180px;border:0;border-radius:8px;"></iframe>
+          </div>
+        </div>
+      </section>
+
+
+      <!-- Chat Section -->
+      <section id="chat" class="mobile-chat">
+        <div class="section-header">
+          <h2>Mande sua mensagem!</h2>
+          <button id="chatToggleBtn" class="chat-toggle">
+            <span class="material-icons">chat</span>
+            Abrir Chat
+          </button>
+        </div>
+      </section>
+
+      <!-- Requests Section -->
+      <section id="requests" class="mobile-requests">
+        <div class="section-header">
+          <h2>Pedidos Musicais</h2>
+          <button id="requestToggleBtn" class="request-toggle">
+            <span class="material-icons">music_note</span>
+            Fazer Pedido
+          </button>
+        </div>
+      </section>
+
+      <!-- Gallery Section (movida abaixo de Pedidos) -->
+      <section id="gallery" class="mobile-gallery">
+      <div class="section-header">
+        <h2>Galeria de Fotos</h2>
+        <p>Momentos especiais do nosso estúdio</p>
+      </div>
+      <div id="storiesStrip" class="stories-strip" aria-label="Destaques">
+        <!-- Bolinhas dos stories serão renderizadas via JS -->
+      </div>
+      <div id="photoGallery" class="mobile-photo-grid">
+        <!-- Fotos serão carregadas dinamicamente -->
+      </div>
+      </section>
+
+      </main>
+
+    <!-- Mobile Bottom Navigation -->
+    <nav class="bottom-nav">
+      <a href="#hero" class="bottom-nav-item active">
+        <span class="material-icons">home</span>
+        <span>Início</span>
+      </a>
+      <a href="#identity" class="bottom-nav-item">
+        <span class="material-icons">account_circle</span>
+        <span>Usuário</span>
+      </a>
+      <a href="#chat" class="bottom-nav-item">
+        <span class="material-icons">chat</span>
+        <span>Chat</span>
+      </a>
+      <a href="#requests" class="bottom-nav-item">
+        <span class="material-icons">music_note</span>
+        <span>Pedidos</span>
+      </a>
+      <a href="#player" class="bottom-nav-item">
+        <span class="material-icons">radio</span>
+        <span>Player</span>
+      </a>
+    </nav>
+  </div>
+
+  <!-- Identity Modal -->
+  <div id="identityModal" class="modal identity">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Identificação</h3>
+        <div class="modal-actions">
+          <button id="closeIdentityBtn" class="icon-btn" aria-label="Fechar">
+            <span class="material-icons">close</span>
+          </button>
+        </div>
+      </div>
       <div class="modal-body">
-        <div class="form-field">
-          <label>Escolha seu avatar</label>
-          <div id="avatarPicker" class="avatar-picker" role="radiogroup" aria-label="Escolha seu avatar"></div>
+        <div class="identity-form">
+          <label for="chatNameModal">Nome completo</label>
+          <input id="chatNameModal" type="text" placeholder="Seu nome completo" maxlength="80" />
+          <label for="chatSchool">Escola/Instituição</label>
+          <input id="chatSchool" type="text" placeholder="Ex.: IFPA Campus Belém" maxlength="80" />
+          <div id="avatarPicker" role="radiogroup" aria-label="Escolher avatar"></div>
+          <p class="muted">Suas informações ficam apenas nesta sessão.</p>
         </div>
-        <div class="form-field">
-          <label for="chatName">Nome</label>
-          <input id="chatName" type="text" placeholder="Seu nome" maxlength="40" />
-        </div>
-        <div class="form-field">
-          <label for="chatSchool">Escola (opcional)</label>
-          <input id="chatSchool" type="text" placeholder="Ex.: IFPA Campus Belém" maxlength="40" />
-        </div>
-        <p class="muted">Suas informações ficam apenas neste dispositivo e sessão.</p>
       </div>
       <div class="modal-footer">
         <button id="identitySaveBtn" class="btn primary">
@@ -135,106 +205,91 @@
     </div>
   </div>
 
-  <!-- Modal: Chat (full-screen) -->
-  <div id="chatModal" class="modal" hidden>
-    <div class="modal-dialog fullscreen" role="dialog" aria-modal="true" aria-labelledby="chatTitle">
-      <div class="modal-header chat-bar">
-        <div class="chat-controls">
-          <button id="playPauseBtnChat" class="icon-btn" aria-label="Reproduzir/Pausar">
-            <span class="material-icons">play_arrow</span>
-          </button>
-          <div class="volume">
-            <span class="material-icons" aria-hidden="true">volume_up</span>
-            <input id="volumeRangeChat" type="range" min="0" max="1" step="0.01" aria-label="Volume" />
-          </div>
-        </div>
-        <div class="chat-title" aria-live="polite">AR Aluno Repórter — Rádio Web</div>
-        <div class="modal-actions">
-          <button id="editIdentityBtn" class="icon-btn" aria-label="Trocar nome/avatar">
-            <span class="material-icons">person</span>
-          </button>
-          <button id="closeChatBtn" class="icon-btn" aria-label="Fechar">
+  <!-- Chat Modal -->
+  <div id="chatModal" class="modal chat">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Mande sua mensagem!</h3>
+        <div class="modal-actions" id="chatModalActions">
+          <button id="closeChatBtn" class="icon-btn" aria-label="Fechar chat">
             <span class="material-icons">close</span>
           </button>
         </div>
       </div>
       <div class="modal-body">
         <ul id="chatList" class="chat-list" aria-live="polite" role="log" aria-relevant="additions text" aria-atomic="false"></ul>
-        <div class="composer">
-          <input id="chatInput" type="text" placeholder="Escreva uma mensagem..." maxlength="240" />
-          <button id="chatSendBtn" class="btn primary" aria-label="Enviar">
-            <span class="material-icons">send</span>
-            <span class="btn-text">Enviar</span>
-          </button>
-          <button id="chatRequestBtn" class="btn" aria-label="Pedir música">
-            <span class="material-icons" aria-hidden="true">music_note</span>
-            <span class="btn-text">Pedido</span>
-          </button>
+        <div class="chat-input-container">
+          <div class="message-input-section">
+            <button id="avatarBtn" class="avatar-btn" aria-label="Escolher avatar">
+              <img id="selectedAvatar" src="./favicon.svg" alt="Avatar" />
+            </button>
+            <input type="text" id="chatInput" placeholder="Mande sua mensagem!" maxlength="240" />
+            <button id="chatSendBtn" class="send-btn" aria-label="Enviar mensagem">
+              <span class="material-icons">send</span>
+            </button>
+            <div id="avatarDropdown" class="avatar-dropdown" hidden>
+              <div id="avatarGrid" class="avatar-grid"></div>
+            </div>
+          </div>
         </div>
-        <!-- formulário inline removido: pedido será feito no mesmo input -->
       </div>
     </div>
   </div>
 
-  <!-- Modal: Configurações -->
-  <div id="settingsModal" class="modal" hidden>
-    <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+  <!-- Request Modal -->
+  <div id="requestModal" class="modal requests">
+    <div class="modal-content">
       <div class="modal-header">
-        <h3 id="settingsTitle">Configurações</h3>
-        <button id="closeSettingsBtn" class="icon-btn" aria-label="Fechar">
-          <span class="material-icons">close</span>
-        </button>
-      </div>
-      <div class="modal-body">
-        <div class="form-field">
-          <label for="streamSelect">Stream</label>
-          <select id="streamSelect"></select>
-        </div>
-        <div class="form-field">
-          <label for="volumeRangeSettings">Volume padrão</label>
-          <input id="volumeRangeSettings" type="range" min="0" max="1" step="0.01" />
-        </div>
-        <p class="muted">As preferências são salvas no dispositivo.</p>
-      </div>
-      <div class="modal-footer">
-        <button id="saveSettingsBtn" class="btn primary">
-          <span class="material-icons">check</span>
-          <span class="btn-text">Salvar</span>
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal: Pedido de Música (mantido por compatibilidade, não usado) -->
-  <div id="requestModal" class="modal" hidden>
-    <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="requestTitle">
-      <div class="modal-header">
-        <h3 id="requestTitle">Pedir Música</h3>
+        <h3>Pedido Musical</h3>
         <button id="closeRequestBtn" class="icon-btn" aria-label="Fechar">
           <span class="material-icons">close</span>
         </button>
       </div>
       <div class="modal-body">
-        <div class="form-field">
-          <label for="reqArtistShort">Artista</label>
-          <input id="reqArtistShort" type="text" placeholder="Nome do artista" maxlength="80" />
+        <div id="requestMessages" class="request-messages"></div>
+        <div class="request-input-container">
+          <div class="request-form">
+            <input type="text" id="requestSong" placeholder="Nome da música" maxlength="100" />
+            <input type="text" id="requestArtist" placeholder="Artista" maxlength="100" />
+            <textarea id="requestMessage" placeholder="Mensagem (opcional)" maxlength="200" rows="3"></textarea>
+            <button id="sendRequestBtn" class="send-request-btn">
+              <span class="material-icons">send</span>
+              Enviar Pedido
+            </button>
+          </div>
         </div>
-        <div class="form-field">
-          <label for="reqSongShort">Música</label>
-          <input id="reqSongShort" type="text" placeholder="Nome da música" maxlength="80" />
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button id="reqSendQuickBtn" class="btn primary">
-          <span class="material-icons">send</span>
-          <span class="btn-text">Enviar pedido</span>
-        </button>
       </div>
     </div>
   </div>
 
-  <script src="./drive.js"></script>
+  <!-- Settings Modal -->
+  <div id="settingsModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Configurações</h3>
+        <button id="closeSettingsBtn" class="icon-btn" aria-label="Fechar">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="settings-section">
+          <h4>Áudio</h4>
+          <div class="setting-item">
+            <label for="volumeRangeSettings">Volume</label>
+            <input type="range" id="volumeRangeSettings" min="0" max="1" step="0.01" />
+          </div>
+        </div>
+        <!-- Removido: seção de Interface / Modo escuro -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <!-- Scripts -->
   <script src="./api_chat.js"></script>
-  <script src="./app.js?v=dev4"></script>
+  <script src="./app.js"></script>
+  <script src="./mobile.js"></script>
 </body>
 </html>

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ar-radio-cache-v3';
+const CACHE_NAME = 'ar-radio-cache-v4';
 const APP_SHELL = [
   '/',
   '/index.html',
