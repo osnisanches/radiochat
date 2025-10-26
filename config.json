@@ -3,7 +3,7 @@
     "name": "Rádio Aluno Repórter (AAC 320 kbps)",
     "primaryStream": "https://stream.radioparadise.com/aac-320",
     "statusJsonUrl": null,
-    "fallbackEmbedPage": "http://fundacaoeducadora.com.br/educadorafm/#"
+    "fallbackEmbedPage": "http://radio.caeteweb.com.br:8668/;?1761503845821"
   },
   "instagram": {
     "profiles": ["conexao.ifpa"],

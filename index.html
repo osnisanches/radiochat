@@ -138,8 +138,8 @@
         <p>Veja o que tá rolando no estúdio ao vivo!</p>
       </div>
       <div id="storiesStrip" class="stories-strip" aria-label="Destaques">
-        <!-- Bolinhas dos stories serão renderizadas via JS -->
-      </div>
+          <!-- Bolinhas dos stories serão renderizadas via JS -->
+        </div>
       <div id="photoGallery" class="mobile-photo-grid">
         <!-- Fotos serão carregadas dinamicamente -->
       </div>
@@ -177,30 +177,35 @@
   </div>
 
   <!-- Identity Modal -->
-  <div id="identityModal" class="modal identity">
+  <div id="identityModal" class="modal chat">
     <div class="modal-content">
       <div class="modal-header">
         <h3>Identificação</h3>
-        <div class="modal-actions">
-          <button id="closeIdentityBtn" class="icon-btn" aria-label="Fechar">
-            <span class="material-icons">close</span>
-          </button>
-        </div>
+        <button id="closeIdentityBtn" class="icon-btn" aria-label="Fechar">
+          <span class="material-icons">close</span>
+        </button>
       </div>
       <div class="modal-body">
         <div class="identity-form">
-          <label for="chatNameModal">Nome:</label>
-          <input id="chatNameModal" type="text" placeholder="Seu nome completo" maxlength="80" />
-          <label for="chatSchool">Escola/Instituição</label>
-          <input id="chatSchool" type="text" placeholder="Ex.: De onde tu és, mano?" maxlength="80" />
+          <div class="identity-form-fields">
+            <label for="chatNameModal">Nome:</label>
+            <div></div>
+            <input id="chatNameModal" type="text" placeholder="Seu nome completo" maxlength="80" />
+            <div></div>
+            <label for="chatSchool">Escola/Instituição:</label>
+            <div></div>
+
+            <input id="chatSchool" type="text" placeholder="Ex.: De onde tu és, mano?" maxlength="80" />
+          </div>
+          <div>Escolha um avatar</div>
           <div id="avatarPicker" role="radiogroup" aria-label="Escolher avatar"></div>
           <p class="muted">Suas informações ficam apenas nesta sessão.</p>
         </div>
       </div>
       <div class="modal-footer">
-        <button id="identitySaveBtn" class="btn primary">
+        <button id="identitySaveBtn" class="send-btn">
           <span class="material-icons">check</span>
-          <span class="btn-text">Continuar</span>
+          <span class="btn-text"></span>
         </button>
       </div>
     </div>
@@ -247,16 +252,11 @@
         </button>
       </div>
       <div class="modal-body">
-        <div id="requestMessages" class="request-messages"></div>
         <div class="request-input-container">
           <div class="request-form">
             <input type="text" id="requestSong" placeholder="Nome da música" maxlength="100" />
             <input type="text" id="requestArtist" placeholder="Artista" maxlength="100" />
-            <textarea id="requestMessage" placeholder="Mensagem (opcional)" maxlength="200" rows="3"></textarea>
-            <button id="sendRequestBtn" class="send-request-btn">
-              <span class="material-icons">send</span>
-              Enviar Pedido
-            </button>
+            <button id="sendRequestBtn" class="send-btn" aria-label=""><span class="material-icons">send</span><span class="btn-text"></span></button>
           </div>
         </div>
       </div>
@@ -289,6 +289,12 @@
   <div id="toastContainer" class="toast-container"></div>
 
   <!-- Scripts -->
+  <script src="https://unpkg.com/@supabase/supabase-js@2.42.7/dist/umd/supabase.min.js"></script>
+  <script>
+    // Opcional: injete via Netlify/Vercel em produção
+    window.SUPABASE_URL = window.SUPABASE_URL || (window.__ENV && window.__ENV.SUPABASE_URL);
+    window.SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY || (window.__ENV && window.__ENV.SUPABASE_ANON_KEY);
+  </script>
   <script src="./api_chat.js"></script>
   <script src="./app.js"></script>
   <script src="./mobile.js"></script>

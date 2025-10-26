@@ -1,3 +1,25 @@
+const RATE_CFG = { intervalMs: 60000, maxPost: 10, maxPatch: 30 };
+const rateStore = new Map(); // in-memory per-instance rate limiter
+function checkRate(ip, kind) {
+  try {
+    const now = Date.now();
+    const rec = rateStore.get(ip) || { post: [], patch: [] };
+    const arr = kind === 'post' ? rec.post : rec.patch;
+    const filtered = arr.filter(ts => now - ts < RATE_CFG.intervalMs);
+    const limit = kind === 'post' ? RATE_CFG.maxPost : RATE_CFG.maxPatch;
+    if (filtered.length >= limit) {
+      // keep trimmed list
+      if (kind === 'post') rec.post = filtered; else rec.patch = filtered;
+      rateStore.set(ip, rec);
+      return false;
+    }
+    filtered.push(now);
+    if (kind === 'post') rec.post = filtered; else rec.patch = filtered;
+    rateStore.set(ip, rec);
+    return true;
+  } catch (_) { return true; }
+}
+
 exports.handler = async (event) => {
   const SUPABASE_URL = process.env.SUPABASE_URL;
   const SUPABASE_SERVICE_ROLE = process.env.SUPABASE_SERVICE_ROLE;
@@ -45,8 +67,12 @@ exports.handler = async (event) => {
     }
 
     if (event.httpMethod === 'POST') {
+      const ip = ((event.headers['x-forwarded-for'] || event.headers['client-ip'] || '') + '').split(',')[0].trim() || 'unknown';
+      if (!checkRate(ip, 'post')) {
+        return { statusCode: 429, headers: corsHeaders(), body: JSON.stringify({ error: 'Rate limit exceeded' }) };
+      }
       const payload = JSON.parse(event.body || '{}');
-      console.log('[chat] POST payload', { payload });
+      console.log('[chat] POST payload', { payload, ip });
       // Basic validation and sanitization server-side
       const row = {
         author_session: String(payload.author || '').slice(0, 64) || null,
@@ -71,6 +97,10 @@ exports.handler = async (event) => {
 
     // PATCH: atualizar reações em "school" (JSON ou número como string)
     if (event.httpMethod === 'PATCH') {
+      const ip = ((event.headers['x-forwarded-for'] || event.headers['client-ip'] || '') + '').split(',')[0].trim() || 'unknown';
+      if (!checkRate(ip, 'patch')) {
+        return { statusCode: 429, headers: corsHeaders(), body: JSON.stringify({ error: 'Rate limit exceeded' }) };
+      }
       const qs = event.queryStringParameters || {};
       const id = (qs.id || '').trim();
       const kind = (qs.kind || '').trim(); // 'like' | 'heart'

@@ -390,6 +390,7 @@ function setupHeaderActions(cfg) {
       chatModal?.classList.add('show');
       renderProviderStatus(cfg);
       renderChat();
+      try { scrollChatToBottom(); } catch (_) {}
       document.getElementById('chatInput')?.focus();
       pageEl?.classList.add('chat-open');
     }
@@ -416,6 +417,7 @@ function setupHeaderActions(cfg) {
       if (typeof showModal === 'function') showModal(chatModal);
       else chatModal?.classList.add('show');
       renderChat();
+      try { scrollChatToBottom(); } catch (_) {}
       document.getElementById('chatInput')?.focus();
       pageEl?.classList.add('chat-open');
     }
@@ -738,8 +740,17 @@ function renderChat() {
   const msgs = (window.chatService && typeof window.chatService.getMessages === 'function') ? window.chatService.getMessages() : [];
   list.innerHTML = '';
   const sid = getSessionId();
+
+  function themeClassFromAuthor(a) {
+    const s = String(a || '');
+    let hash = 0;
+    for (let i = 0; i < s.length; i++) { hash = (hash * 31 + s.charCodeAt(i)) & 0xffffffff; }
+    const idx = Math.abs(hash) % 3;
+    return idx === 0 ? 'theme-green' : idx === 1 ? 'theme-blue' : 'theme-lilac';
+  }
+
   msgs.forEach((m) => {
-    const isMine = m.author === sid;
+    const isMine = (m.author || m.author_session) === sid;
     const li = document.createElement('li');
     li.className = `message-item ${isMine ? 'mine' : 'theirs'}`;
 
@@ -753,22 +764,29 @@ function renderChat() {
     const bubble = document.createElement('div');
     const bubbleClasses = ['bubble'];
     if (m.type === 'request') bubbleClasses.push('request');
+    if (!isMine) bubbleClasses.push(themeClassFromAuthor(m.author || m.name));
     bubble.className = bubbleClasses.join(' ');
 
     const name = document.createElement('span');
     name.className = 'name';
-    name.textContent = String(m.name || '').split('&&&')[0].trim();
+    const displayName = String(m.name || '').split('&&&')[0].trim();
+    name.textContent = displayName;
     bubble.appendChild(name);
 
-    if (m.type === 'request') {
-      const title = document.createElement('span');
-      title.className = 'title';
-      title.textContent = 'Pedido do ouvinte!';
-      bubble.appendChild(title);
-    }
-
     const text = document.createElement('p');
-    text.textContent = m.text;
+
+    if (m.type === 'request') {
+      // Formatação especial para pedidos de música
+      let artist = '';
+      let song = '';
+      const parts = String(m.text || '').split(/\s*[—\-\/|]\s*/);
+      if (parts.length >= 2) { artist = parts[0].trim(); song = parts[1].trim(); }
+      else { song = String(m.text || '').trim(); }
+      const formatted = `🎵 Pedido de música: ${displayName} quer ouvir ${song}${artist ? `, de ${artist}` : ''}.`;
+      text.textContent = formatted;
+    } else {
+      text.textContent = m.text;
+    }
     bubble.appendChild(text);
 
     const time = document.createElement('span');
@@ -779,7 +797,7 @@ function renderChat() {
     const hour = String(dt.getHours()).padStart(2, '0');
     const minute = String(dt.getMinutes()).padStart(2, '0');
     time.textContent = `${day}/${month}, ${hour}h${minute}`;
-    text.appendChild(time);
+    bubble.appendChild(time);
 
     // Ícones de reação flutuantes (não botões)
     let likeCount = 0, heartCount = 0;
@@ -812,16 +830,16 @@ function renderChat() {
     reacts.appendChild(heart);
 
     if (isMine) {
-      // Para minhas mensagens, bolha vem antes e avatar depois para alinhar à direita
-      li.appendChild(bubble);
+      // Mensagens do usuário: avatar à esquerda, bolha à direita, alinhadas à esquerda
       li.appendChild(avatar);
+      li.appendChild(bubble);
     } else {
-      // Para mensagens de outros, avatar à esquerda e bolha à direita
-      li.appendChild(avatar);
+      // Mensagens de outros: bolha à direita, avatar à direita, alinhadas à direita
       li.appendChild(bubble);
+      li.appendChild(avatar);
     }
 
-    // Reações abaixo da mensagem, alinhadas à direita
+    // Reações abaixo da mensagem
     li.appendChild(reacts);
 
     list.appendChild(li);
@@ -868,6 +886,7 @@ async function sendChatMessage(cfg) {
   } catch (e) { ok = false; }
   input.value = '';
   renderChat();
+  try { scrollChatToBottom(); } catch (_) {}
   if (!ok) {
     showToast('Falha ao enviar mensagem.');
   }
@@ -946,11 +965,76 @@ function sendRequest(cfg) {
   renderRequests();
 }
 
+function sendRequestFromModal(cfg) {
+  const songEl = document.getElementById('requestSong');
+  const artistEl = document.getElementById('requestArtist');
+  const msgEl = document.getElementById('requestMessage');
+  if (!songEl || !artistEl) return;
+  const song = (songEl.value || '').trim();
+  const artist = (artistEl.value || '').trim();
+  const extraMsg = (msgEl?.value || '').trim();
+  if (!song) { showToast('Informe a música.'); return; }
+
+  const id = loadIdentity(cfg);
+  const combinedName = id.school ? `${id.name} &&& ${id.school}` : id.name;
+
+  const req = {
+    id: crypto.randomUUID(),
+    artist: artist.slice(0,80),
+    song: song.slice(0,80),
+    name: combinedName,
+    message: extraMsg.slice(0,200),
+    ts: Date.now()
+  };
+  const reqs = pruneOld(readStore('ar_music_requests'), 7);
+  reqs.push(req);
+  writeStore('ar_music_requests', reqs);
+
+  const sid = getSessionId();
+  const msg = {
+    id: crypto.randomUUID(),
+    text: artist && song ? `${artist} — ${song}` : song,
+    name: combinedName,
+    avatar: id.avatar,
+    ts: Date.now(),
+    author: sid,
+    type: 'request',
+    school: JSON.stringify({ like: 0, heart: 0 })
+  };
+
+  (async () => {
+    try {
+      const res = window.chatService?.addMessage?.(msg);
+      if (typeof res?.then === 'function') await res;
+      renderChat();
+      showToast('Pedido enviado!');
+    } catch (e) {
+      showToast('Chat indisponível.');
+    }
+  })();
+
+  // limpar e fechar modal
+  songEl.value = '';
+  artistEl.value = '';
+  if (msgEl) msgEl.value = '';
+  const modal = document.getElementById('requestModal');
+  const chatModal = document.getElementById('chatModal');
+  if (modal) { modal.hidden = true; modal.classList.remove('show'); }
+  // abrir chat automaticamente após enviar
+  if (chatModal) {
+    if (typeof showModal === 'function') showModal(chatModal);
+    else chatModal.classList.add('show');
+    renderChat();
+    document.getElementById('chatInput')?.focus();
+    document.querySelector('.page')?.classList.add('chat-open');
+  }
+}
+
 function toggleReaction(messageId, kind) {
   // tenta backend; senão, fallback local
-  if (window.chatService && typeof window.chatService.react === 'function') {
+  if (window.apiChat && typeof window.apiChat.react === 'function') {
     (async () => {
-      try { await window.chatService.react(messageId, kind); } catch(_) { showToast('Falha ao reagir.'); }
+      try { await window.apiChat.react(messageId, kind); } catch(_) { showToast('Falha ao reagir.'); }
     })();
     return;
   }
@@ -1078,6 +1162,7 @@ function setupInteractions(cfg) {
   chatInput?.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') { e.preventDefault(); sendCurrent(); }
   });
+
 }
 
 function renderRequests() {
@@ -1141,16 +1226,16 @@ function renderGallery() {
   renderStoriesStrip(stories, photos);
 
   // Ajustar colunas da grade: apenas miniaturas pequenas
-  container.classList.remove('cols-3', 'cols-5');
-  container.classList.add('cols-5');
+  // container.classList.remove('cols-3', 'cols-5');
+  // container.classList.add('cols-5');
 
   // Renderizar grade
-  renderPhotoGrid(container, photos);
+  // renderPhotoGrid(container, photos);
 }
 
 function renderStoriesStrip(stories, photos) {
   if (!stories) return;
-  const placeholders = 5;
+  const placeholders = 10;
   const latest = photos.slice().reverse().slice(0, placeholders);
   const need = placeholders - latest.length;
   const fallbackSrc = './favicon.svg';
@@ -1419,6 +1504,10 @@ function setupInteractions(cfg) {
   // pedidos de música (antigo)
   const reqBtn = document.getElementById('reqSendBtn');
   reqBtn?.addEventListener('click', () => sendRequest(cfg));
+
+  const sendRequestBtn = document.getElementById('sendRequestBtn');
+  sendRequestBtn?.addEventListener('click', () => sendRequestFromModal(cfg));
+
   renderRequests();
 
   // galeria/admin
@@ -1430,12 +1519,13 @@ function setupInteractions(cfg) {
   try {
     const cfg = await loadConfig();
 
-    // Preferir API server-side (Netlify/Vercel) para zero exposição
+    // Preferir API server-side (Netlify/Vercel); manter fallback local
     try {
+      const localChat = window.chatService;
       await window.apiChat?.init?.();
-      window.chatService = window.apiChat?.isHealthy?.() ? window.apiChat : null;
+      window.chatService = window.apiChat?.isHealthy?.() ? window.apiChat : localChat;
     } catch (_) {
-      window.chatService = null;
+      // mantém o provider local caso supabase/netlify não estejam disponíveis
     }
 
     setupPlayer(cfg);
@@ -1444,8 +1534,32 @@ function setupInteractions(cfg) {
     setupInteractions(cfg);
     renderProviderStatus(cfg);
 
-    // Assinar atualizações do chat para rerender
-    try { window.chatService?.subscribe(() => { renderChat(); }); } catch (_) {}
+    // Supabase Realtime (opcional, se chaves estiverem disponíveis)
+    try {
+      const sUrl = window.SUPABASE_URL;
+      const sKey = window.SUPABASE_ANON_KEY;
+      if (sUrl && sKey && window.supabase?.createClient) {
+        const sb = window.supabase.createClient(sUrl, sKey);
+        const channel = sb.channel('public:messages')
+          .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, (payload) => {
+            try { window.apiChat?.refresh?.(); } catch (_) {}
+          })
+          .subscribe();
+        window.supabaseClient = sb;
+        window.supabaseChannel = channel;
+      }
+    } catch(_) {}
+
+    // Atualizações periódicas para simular push mínimo
+    try {
+      if (window.apiChat?.isHealthy?.()) {
+        setInterval(() => { try { window.apiChat?.refresh?.(); } catch (_) {} }, 3000);
+        window.apiChat?.subscribe?.(() => { renderChat(); try { handleUnreadBadge(); } catch (_) {} });
+      } else {
+        window.chatService?.subscribe?.(() => { renderChat(); try { handleUnreadBadge(); } catch (_) {} });
+      }
+    } catch (_) {}
+    try { handleUnreadBadge(); } catch (_) {}
 
     registerServiceWorker();
   } catch (err) {
@@ -1486,8 +1600,45 @@ function renderProviderStatus(cfg) {
   } catch (_) {}
 }
 
+function handleUnreadBadge() {
+  try {
+    const messages = window.apiChat?.getMessages?.() || [];
+    const modal = document.getElementById('chatModal');
+    const link = document.querySelector('a.nav-link[href="#chat"]');
+    const latestMs = messages.reduce((acc, m) => {
+      const t = typeof m.ts === 'string' ? Date.parse(m.ts) : (m.ts || 0);
+      return Math.max(acc, Number.isFinite(t) ? t : acc);
+    }, 0);
+    const lastSeen = parseInt(localStorage.getItem('ar_chat_seen_ts') || '0', 10);
+    if (modal && modal.classList.contains('show')) {
+      if (latestMs) localStorage.setItem('ar_chat_seen_ts', String(latestMs));
+      link?.removeAttribute('data-unread');
+    } else {
+      const count = messages.filter((m) => {
+        const t = typeof m.ts === 'string' ? Date.parse(m.ts) : (m.ts || 0);
+        return t && t > lastSeen;
+      }).length;
+      if (count > 0) {
+        link?.setAttribute('data-unread', String(count));
+        try { showToast('Nova mensagem no chat', { durationMs: 1500 }); } catch (_) {}
+      } else {
+        link?.removeAttribute('data-unread');
+      }
+    }
+  } catch (_) {}
+}
+
+function scrollChatToBottom() {
+  try {
+    const list = document.getElementById('chatList');
+    if (list) { list.scrollTop = list.scrollHeight; }
+    try { window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }); } catch (_) {}
+  } catch (_) {}
+}
+
 function registerServiceWorker() {
   if ('serviceWorker' in navigator) {
     try { navigator.serviceWorker.register('./sw.js'); } catch (_) {}
   }
 }
+
